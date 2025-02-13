@@ -1,62 +1,83 @@
-<p align="center">
-  <a href="https://www.medusajs.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/59018053/229103275-b5e482bb-4601-46e6-8142-244f531cebdb.svg">
-    <source media="(prefers-color-scheme: light)" srcset="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    <img alt="Medusa logo" src="https://user-images.githubusercontent.com/59018053/229103726-e5b529a3-9b3f-4970-8a1f-c6af37f087bf.svg">
-    </picture>
-  </a>
-</p>
-<h1 align="center">
-  Medusa
-</h1>
+# Patch Request Failing with "Review with id \"\" not found" Error
 
-<h4 align="center">
-  <a href="https://docs.medusajs.com">Documentation</a> |
-  <a href="https://www.medusajs.com">Website</a>
-</h4>
+## Issue Overview
 
-<p align="center">
-  Building blocks for digital commerce
-</p>
-<p align="center">
-  <a href="https://github.com/medusajs/medusa/blob/master/CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat" alt="PRs welcome!" />
-  </a>
-    <a href="https://www.producthunt.com/posts/medusa"><img src="https://img.shields.io/badge/Product%20Hunt-%231%20Product%20of%20the%20Day-%23DA552E" alt="Product Hunt"></a>
-  <a href="https://discord.gg/xpCwq3Kfn8">
-    <img src="https://img.shields.io/badge/chat-on%20discord-7289DA.svg" alt="Discord Chat" />
-  </a>
-  <a href="https://twitter.com/intent/follow?screen_name=medusajs">
-    <img src="https://img.shields.io/twitter/follow/medusajs.svg?label=Follow%20@medusajs" alt="Follow @medusajs" />
-  </a>
-</p>
+I am encountering an issue while making a `PATCH` request to the API endpoint `admin/reviews/:id` to update a review. Although the server logs show that the user and review are successfully retrieved along with the correct ID, the request fails with the following error:
 
-## Compatibility
+```json
+{
+  "message": "An unexpected error occurred",
+  "error": "Review with id \"\" not found"
+}
+```
 
-This starter is compatible with versions >= 2 of `@medusajs/medusa`. 
+## Expected Behavior
 
-## Getting Started
+- The API should update the review with the provided ID.
+- The response should indicate a successful update, such as a `200 OK` status with the updated review object.
 
-Visit the [Quickstart Guide](https://docs.medusajs.com/learn/installation) to set up a server.
+## Current Behavior
 
-Visit the [Docs](https://docs.medusajs.com/learn/installation#get-started) to learn more about our system requirements.
+- The server retrieves the user and the review, and logs both with the correct ID.
+- Despite this, the API returns an error indicating that the review with the given ID is not found.
 
-## What is Medusa
+## Steps to Reproduce
 
-Medusa is a set of commerce modules and tools that allow you to build rich, reliable, and performant commerce applications without reinventing core commerce logic. The modules can be customized and used to build advanced ecommerce stores, marketplaces, or any product that needs foundational commerce primitives. All modules are open-source and freely available on npm.
+1. Send a `PATCH` request to the endpoint `admin/reviews/:id` with a valid review ID and the required data in the request body.
+2. Check the server logs to confirm that the review and user are correctly retrieved and logged.
+3. Observe the error response.
 
-Learn more about [Medusa’s architecture](https://docs.medusajs.com/learn/introduction/architecture) and [commerce modules](https://docs.medusajs.com/learn/fundamentals/modules/commerce-modules) in the Docs.
+## Verifying the Review's ID
 
-## Community & Contributions
+To ensure the given review's ID is correct, perform the following steps:
 
-The community and core team are available in [GitHub Discussions](https://github.com/medusajs/medusa/discussions), where you can ask for support, discuss roadmap, and share ideas.
+1. Retrieve the list of reviews via the API or database query to confirm the ID exists.
+2. Use a `GET` request to the endpoint `admin/reviews` to confirm the review can be retrieved.
+3. Check the database directly to ensure the review's ID matches the one being sent in the `PATCH` request.
 
-Join our [Discord server](https://discord.com/invite/medusajs) to meet other community members.
+**Attach screenshot of the review retrieval process here:**  
+![Review Retrieval Screenshot](./images/reviews-retrieval.png)
 
-## Other channels
+## Logs and Observations
 
-- [GitHub Issues](https://github.com/medusajs/medusa/issues)
-- [Twitter](https://twitter.com/medusajs)
-- [LinkedIn](https://www.linkedin.com/company/medusajs)
-- [Medusa Blog](https://medusajs.com/blog/)
+Here are the relevant logs showing the review and user being retrieved:
+
+![Logs showing review and user retrieval](./images/update-review-logs.png)
+
+## Sample cURL Request
+
+Below is an example of the `PATCH` request being made:
+
+```bash
+curl -X PATCH "http://localhost:9000/admin/reviews/12345" \
+-H "Authorization: Bearer <your-token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "title": "Updated Review Title",
+  "content": "Updated review content."
+}'
+```
+
+![Sample cURL Request](./images/curl-example.png)
+
+## Workflow and API Request Files
+
+For reference, here are links to the actual files in the project related to this process:
+
+- **Workflow File:** [`src/workflows/validate-reviews.ts`](./src/workflows/validate-reviews.ts)  
+  This file contains the logic to validate reviews before processing the request.
+
+- **API Request File:** [`src/api/admin/reviews/[id]/route.ts`](./src/api/admin/reviews/[id]/route.ts)  
+  This file defines the `PATCH` request handler for updating reviews.
+
+## Possible Causes
+
+- The ID might be missing or incorrectly parsed in the request handler.
+- Middleware or validation logic could be altering the request data.
+- There may be a mismatch between the logged data and the data being used for validation.
+
+## Environment Details
+
+- **MedusaJS Version:** 2.4.0
+- **Database:** PostgreSQL 17.2
+- **Operating System:** macOS 15.2
